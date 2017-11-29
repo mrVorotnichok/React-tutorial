@@ -11,6 +11,13 @@ var myNews = [
 ];
 
 var Article = React.createClass({
+  propTypes: {
+    data: React.PropTypes.shape({
+      author: React.PropTypes.string.isRequired,
+      text: React.PropTypes.string.isRequired
+    })
+  },
+
   render: function () {
     var author = this.props.data.author,
         text = this.props.data.author;
@@ -25,10 +32,13 @@ var Article = React.createClass({
 });
 
 var News = React.createClass({
+  propsTypes: {
+    data: React.PropTypes.array.isRequired
+  },
+
   render: function () {
     var data = this.props.data;
     var newsTemplate;
-
 
     if(data.length > 0) {
 

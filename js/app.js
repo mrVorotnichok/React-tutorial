@@ -111,15 +111,22 @@ var Add = React.createClass({
       btnIsDisabled: true
     };
   },
+  
   componentDidMount: function() {
     ReactDOM.findDOMNode(this.refs.author).focus();
   },
   onBtnClickHandler: function(e) {
     e.preventDefault();
+    var author = ReactDOM.findDOMNode(this.refs.author).value;
+    var text = ReactDOM.findDOMNode(this.refs.text).value;
+
+    alert(author + '\n' + text);
   },
+
   onCheckRuleClick: function() {
     this.setState({btnIsDisabled: !this.state.btnIsDisabled}); //устанавливаем значение в state
   },
+
   render: function() {
     return (
       <form className='add cf'>

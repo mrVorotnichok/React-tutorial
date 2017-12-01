@@ -12,6 +12,8 @@ var myNews = [
   },
 ];
 
+window.ee = new EventEmitter();
+
 var Article = React.createClass({
   propTypes: {
     data: React.PropTypes.shape({
@@ -63,16 +65,6 @@ var News = React.createClass({
     data: React.PropTypes.array.isRequired
   },
 
-  getInitialState: function () {
-    return {
-      counter: 0
-    }
-  },
-
-  onTotalNewsClick: function() {
-    this.setState({counter: ++this.state.counter });
-  },
-
   render: function () {
     var data = this.props.data;
     var newsTemplate;
@@ -96,8 +88,7 @@ var News = React.createClass({
       <div className="news">
         {newsTemplate}
         <strong
-          className={data.length > 0 ? '':'.none'}
-          onClick={this.onTotalNewsClick}>
+          className={'news__count ' + (data.length > 0 ? '':'.none')}>
           Всего	новостей:	{data.length}
         </strong>
       </div>
@@ -110,7 +101,7 @@ var Add = React.createClass({
     return {
       agreeNotChecked: true,
       authorIsEmpty: true,
-      textIsEmpty: true
+      titleIsEmpty: true
     };
   },
 
@@ -118,11 +109,24 @@ var Add = React.createClass({
     ReactDOM.findDOMNode(this.refs.author).focus();
   },
 
+  //удаляем заголовок новости и оставляем автора и чекбокс
   onBtnClickHandler: function(e) {
     e.preventDefault();
+    var titleEl = ReactDOM.findDOMNode(this.refs.title);
+
     var author = ReactDOM.findDOMNode(this.refs.author).value;
-    var text = ReactDOM.findDOMNode(this.refs.text).value;
-    alert(author + '\n' + text);
+    var title = titleEl.value;
+
+    var item = [{
+      author: author,
+      title: title,
+      text: '...'
+    }];
+
+    window.ee.emit('News.add', item);
+
+    titleEl.value = '';
+    this.setState({titleIsEmpty: true});
   },
 
   onCheckRuleClick: function() {
@@ -144,7 +148,7 @@ var Add = React.createClass({
   render: function() {
     var agreeNotChecked = this.state.agreeNotChecked,
       authorIsEmpty = this.state.authorIsEmpty,
-      textIsEmpty = this.state.textIsEmpty;
+      titleIsEmpty = this.state.titleIsEmpty;
 
     return (
       <form className='add cf'>
@@ -157,10 +161,10 @@ var Add = React.createClass({
         />
 
         <textarea
-          className='add__text'
-          onChange={this.onFieldChange.bind(this, 'textIsEmpty')}
-          placeholder='Текст новости'
-          ref='text'
+          className='add__title'
+          onChange={this.onFieldChange.bind(this, 'titleIsEmpty')}
+          placeholder='Заголовок новости'
+          ref='title'
         ></textarea>
 
         <label className='add__checkrule'>
@@ -171,7 +175,7 @@ var Add = React.createClass({
           className='add__btn'
           onClick={this.onBtnClickHandler}
           ref='alert_button'
-          disabled={agreeNotChecked || authorIsEmpty || textIsEmpty}
+          disabled={agreeNotChecked || authorIsEmpty || titleIsEmpty}
         >
           Добавить новость
         </button>
@@ -181,12 +185,31 @@ var Add = React.createClass({
 });
 
 var App = React.createClass({
+  getInitialState: function() {
+    return {
+      news: myNews
+    };
+  },
+
+  componentDidMount: function() {
+    var self = this;
+    window.ee.addListener('News.add', function(item) {
+      var nextNews = item.concat(self.state.news);
+      self.setState({news: nextNews});
+    });
+  },
+
+  componentWillUnmount: function() {
+    window.ee.removeListener('News.add');
+  },
+
   render: function() {
+    console.log('render');
     return (
       <div className="app">
         <Add/>
         <h3>Новости</h3>
-        <News data={myNews}/>
+        <News data={this.state.news}/>
       </div>
     );
   }

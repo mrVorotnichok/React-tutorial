@@ -113,51 +113,56 @@ var Add = React.createClass({
       textIsEmpty: true
     };
   },
+
   componentDidMount: function() {
     ReactDOM.findDOMNode(this.refs.author).focus();
   },
+
   onBtnClickHandler: function(e) {
     e.preventDefault();
     var author = ReactDOM.findDOMNode(this.refs.author).value;
     var text = ReactDOM.findDOMNode(this.refs.text).value;
     alert(author + '\n' + text);
   },
+
   onCheckRuleClick: function() {
     this.setState({agreeNotChecked: !this.state.agreeNotChecked}); //устанавливаем значение в state
   },
-  onAuthorChange: function(e) {
+
+  onFieldChange: function(fieldName, e) {
+    var next ={};
+
     if (e.target.value.trim().length > 0) {
-      this.setState({authorIsEmpty: false})
+      next[fieldName] = false;
+      this.setState(next);
     } else {
-      this.setState({authorIsEmpty: true})
+      next[fieldName] = true;
+      this.setState(next);
     }
   },
-  onTextChange: function(e) {
-    if (e.target.value.trim().length > 0) {
-      this.setState({textIsEmpty: false})
-    } else {
-      this.setState({textIsEmpty: true})
-    }
-  },
+
   render: function() {
     var agreeNotChecked = this.state.agreeNotChecked,
       authorIsEmpty = this.state.authorIsEmpty,
       textIsEmpty = this.state.textIsEmpty;
+
     return (
       <form className='add cf'>
         <input
           type='text'
           className='add__author'
-          onChange={this.onAuthorChange}
+          onChange={this.onFieldChange.bind(this, 'authorIsEmpty')}
           placeholder='Ваше имя'
           ref='author'
         />
+
         <textarea
           className='add__text'
-          onChange={this.onTextChange}
+          onChange={this.onFieldChange.bind(this, 'textIsEmpty')}
           placeholder='Текст новости'
           ref='text'
         ></textarea>
+
         <label className='add__checkrule'>
           <input type='checkbox' ref='checkrule' onChange={this.onCheckRuleClick}/>Я согласен с правилами
         </label>
@@ -168,7 +173,7 @@ var Add = React.createClass({
           ref='alert_button'
           disabled={agreeNotChecked || authorIsEmpty || textIsEmpty}
         >
-          Показать alert
+          Добавить новость
         </button>
       </form>
     );

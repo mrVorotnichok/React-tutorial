@@ -1,221 +1,83 @@
-var myNews = [
-  {
-    author: 'first author',
-    title: 'fist new',
-    text: 'description new'
-  },
-
-  {
-    author: 'second author',
-    title: 'second new',
-    text: 'description second new'
-  },
-];
-
-window.ee = new EventEmitter();
-
-var Article = React.createClass({
-  propTypes: {
-    data: React.PropTypes.shape({
-      author: React.PropTypes.string.isRequired,
-      title: React.PropTypes.string.isRequired,
-      text: React.PropTypes.string.isRequired
-    })
-  },
-
-  getInitialState: function () {
-    return {
-      visible: false
-    }
-  },
-
-  /*функция для изменения состояния компонента*/
-  readMoreClick : function (e) {
-    e.preventDefault();
-    this.setState({visible: true})
-  },
-
-  render: function () {
-    var author = this.props.data.author,
-        title = this.props.data.title,
-        text = this.props.data.text,
-        visible = this.state.visible; // считываем значение переменной из состояния компонента
-
+class Square extends React.Component {
+  render() {
     return (
-      <div className='article'>
-        <p className='news__author'>{author}:</p>
-        <p className='news__title'>{title}</p>
-
-        {/* для ссылки readmore: не показывай ссылку, если visible === true */}
-        <a href="#"
-           onClick={this.readMoreClick}
-           className={'news__readMore ' + (visible ? 'none':'')}>
-          Подробнее
-        </a>
-
-        {/*не показывай текст, если visible === false */}
-        <p className={'news__text ' + (visible ? '':'none')}>{text}</p>
-      </div>
-    )
-  }
-});
-
-var News = React.createClass({
-  propsTypes: {
-    data: React.PropTypes.array.isRequired
-  },
-
-  render: function () {
-    var data = this.props.data;
-    var newsTemplate;
-
-    if(data.length > 0) {
-
-      /*создаем массив с react-элементами*/
-      newsTemplate = data.map(function (item, index) {
-        return(
-          <div key={index}>
-            <Article data={item}/>
-          </div>
-        )
-      });
-    } else {
-      newsTemplate = <p>Новостей нет :(</p>
-    }
-
-    /*возвращаем разметку*/
-    return(
-      <div className="news">
-        {newsTemplate}
-        <strong
-          className={'news__count ' + (data.length > 0 ? '':'.none')}>
-          Всего	новостей:	{data.length}
-        </strong>
-      </div>
-    )
-  }
-});
-
-var Add = React.createClass({
-  getInitialState: function() { //устанавливаем начальное состояние (state)
-    return {
-      agreeNotChecked: true,
-      authorIsEmpty: true,
-      titleIsEmpty: true
-    };
-  },
-
-  componentDidMount: function() {
-    ReactDOM.findDOMNode(this.refs.author).focus();
-  },
-
-  //удаляем заголовок новости и оставляем автора и чекбокс
-  onBtnClickHandler: function(e) {
-    e.preventDefault();
-    var titleEl = ReactDOM.findDOMNode(this.refs.title);
-
-    var author = ReactDOM.findDOMNode(this.refs.author).value;
-    var title = titleEl.value;
-
-    var item = [{
-      author: author,
-      title: title,
-      text: '...'
-    }];
-
-    window.ee.emit('News.add', item);
-
-    titleEl.value = '';
-    this.setState({titleIsEmpty: true});
-  },
-
-  onCheckRuleClick: function() {
-    this.setState({agreeNotChecked: !this.state.agreeNotChecked}); //устанавливаем значение в state
-  },
-
-  onFieldChange: function(fieldName, e) {
-    var next ={};
-
-    if (e.target.value.trim().length > 0) {
-      next[fieldName] = false;
-      this.setState(next);
-    } else {
-      next[fieldName] = true;
-      this.setState(next);
-    }
-  },
-
-  render: function() {
-    var agreeNotChecked = this.state.agreeNotChecked,
-      authorIsEmpty = this.state.authorIsEmpty,
-      titleIsEmpty = this.state.titleIsEmpty;
-
-    return (
-      <form className='add cf'>
-        <input
-          type='text'
-          className='add__author'
-          onChange={this.onFieldChange.bind(this, 'authorIsEmpty')}
-          placeholder='Ваше имя'
-          ref='author'
-        />
-
-        <textarea
-          className='add__title'
-          onChange={this.onFieldChange.bind(this, 'titleIsEmpty')}
-          placeholder='Заголовок новости'
-          ref='title'
-        ></textarea>
-
-        <label className='add__checkrule'>
-          <input type='checkbox' ref='checkrule' onChange={this.onCheckRuleClick}/>Я согласен с правилами
-        </label>
-
-        <button
-          className='add__btn'
-          onClick={this.onBtnClickHandler}
-          ref='alert_button'
-          disabled={agreeNotChecked || authorIsEmpty || titleIsEmpty}
-        >
-          Добавить новость
-        </button>
-      </form>
+      <button className="square" onClick={() => this.props.onClick()}>
+        {this.props.value}
+      </button>
     );
   }
-});
+}
 
-var App = React.createClass({
-  getInitialState: function() {
-    return {
-      news: myNews
+class Board extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      squares: Array(9).fill(null),
+      xIsNext: true,
     };
-  },
+  }
 
-  componentDidMount: function() {
-    var self = this;
-    window.ee.addListener('News.add', function(item) {
-      var nextNews = item.concat(self.state.news);
-      self.setState({news: nextNews});
+  handleClick(i) {
+    const squares = this.state.squares.slice();
+    squares[i] = this.state.xIsNext ? 'X' : 'O';
+    this.setState({
+      squares: squares,
+      xIsNext: !this.state.xIsNext,
     });
-  },
+  }
 
-  componentWillUnmount: function() {
-    window.ee.removeListener('News.add');
-  },
+  renderSquare(i) {
+    return <Square
+              value={this.state.squares[i]}
+              onClick={() => this.handleClick(i)}
+           />;
+  }
 
-  render: function() {
-    console.log('render');
+  render() {
+    const status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+
     return (
-      <div className="app">
-        <Add/>
-        <h3>Новости</h3>
-        <News data={this.state.news}/>
+      <div>
+        <div className="status">{status}</div>
+        <div className="board-row">
+          {this.renderSquare(0)}
+          {this.renderSquare(1)}
+          {this.renderSquare(2)}
+        </div>
+        <div className="board-row">
+          {this.renderSquare(3)}
+          {this.renderSquare(4)}
+          {this.renderSquare(5)}
+        </div>
+        <div className="board-row">
+          {this.renderSquare(6)}
+          {this.renderSquare(7)}
+          {this.renderSquare(8)}
+        </div>
       </div>
     );
   }
-});
+}
+
+class Game extends React.Component {
+  render() {
+    return (
+      <div className="game">
+        <div className="game-board">
+          <Board />
+        </div>
+        <div className="game-info">
+          <div>{/* status */}</div>
+          <ol>{/* TODO */}</ol>
+        </div>
+      </div>
+    );
+  }
+}
+
+// ========================================
 
 ReactDOM.render(
-  <App/>,
+  <Game />,
   document.getElementById('root')
 );
